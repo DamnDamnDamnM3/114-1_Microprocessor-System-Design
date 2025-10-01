@@ -40,24 +40,29 @@ void Display_binary(int value) {
 
 int main(void) {
     int key, lastKey = 0;
+		int pressed = 0;
 
     SYS_Init();
     OpenKeyPad();
 
 
     GPIO_SetMode(PB, BIT11, GPIO_MODE_OUTPUT);
-    GPIO_SetMode(PA, BIT12 | BIT13 | BIT14 | BIT15, GPIO_MODE_OUTPUT);
+    GPIO_SetMode(PC, BIT12 | BIT13 | BIT14 | BIT15, GPIO_MODE_OUTPUT);
 
     PB11 = 1;
 
     while (1) {
         key = ScanKey();
 
-        if (key != 0 && lastKey == 0) {
-            while (ScanKey() != 0);
-						Display_binary(key);
-            Buzz(key);
+        if (key != 0 && pressed == 0) {
+            // ????? ? ?? key
+            pressed = key;
         }
-        lastKey = key;
+        else if (key == 0 && pressed != 0) {
+            // ????? ? ????
+            Display_binary(pressed);
+            Buzz(pressed);
+            pressed = 0; // reset
+        }
     }
 }
