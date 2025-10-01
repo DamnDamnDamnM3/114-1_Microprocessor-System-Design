@@ -54,8 +54,9 @@ int main(void) {
         key = ScanKey();
 
         if (key != 0 && lastKey == 0) {
+            while (ScanKey() != 0);
 						Display_binary(key);
-						Buzz(key);
+            Buzz(key);
         }
         lastKey = key;
     }
