@@ -32,6 +32,7 @@ void Display_Lab4_1(int remainder, int randomNum)
 int main(void)
 {
     int key = 0;
+    int lastKey = 0;
     int randomNum = 0;
     int remainder = 0;
     int seedCounter = 0;
@@ -47,15 +48,16 @@ int main(void)
         seedCounter++;
         key = ScanKey();
 
+        if (key == 0 && lastKey == 3)
+        {
+            srand(seedCounter);
+            randomNum = rand() % 100;
+            clearFlag = 0;
+        }
+
         if (key != 0)
         {
-            if (key == 3)
-            {
-                srand(seedCounter);
-                randomNum = rand() % 100;
-                clearFlag = 0;
-            }
-            else if (key == 1)
+            if (key == 1)
                 remainder = randomNum % 2;
             else if (key == 4)
                 remainder = randomNum % 3;
@@ -69,6 +71,8 @@ int main(void)
                 CloseSevenSegment();
             }
         }
+
+        lastKey = key;
 
         if (!clearFlag)
             Display_Lab4_1(remainder, randomNum);
