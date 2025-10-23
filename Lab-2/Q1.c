@@ -1,55 +1,104 @@
-//
-// GPIO_Keypad : 3x3 keypad input and control LEDs (or Relays)
-//
-// EVB : Nu-LB-NUC140
-// MCU : NUC140VE3CN
+/*
+ * ================================================================
+ * Lab 2 - Question 1: GPIO按鍵控制LED顯示
+ * 功能：使用3x3按鍵矩陣控制4個LED的顯示模式
+ * 硬體：Nu-LB-NUC140開發板，NUC140VE3CN微控制器
+ * 作者：damnm3@googlegroups.com 共同作者
+ * ================================================================
+ * 
+ * 硬體連接：
+ * - PA0,1,2,3,4,5 連接至3x3按鍵矩陣
+ * - PC12,13,14,15 連接至LED（或繼電器）
+ * 
+ * 按鍵對應的LED顯示模式：
+ * 按鍵1: PC12=1, PC13=1, PC14=1, PC15=0 (顯示數字1)
+ * 按鍵2: PC12=1, PC13=1, PC14=0, PC15=1 (顯示數字2)
+ * 按鍵3: PC12=1, PC13=1, PC14=1, PC15=0 (顯示數字1)
+ * 按鍵4: PC12=0, PC13=0, PC14=0, PC15=0 (顯示數字0)
+ * 按鍵5: PC12=1, PC13=0, PC14=0, PC15=0 (顯示數字7)
+ * 按鍵6: PC12=0, PC13=1, PC14=1, PC15=0 (顯示數字9)
+ * 按鍵7: PC12=0, PC13=1, PC14=1, PC15=0 (顯示數字9)
+ * 其他: PC12=1, PC13=1, PC14=1, PC15=1 (全部關閉)
+ */
 
-// PA0,1,2,3,4,5 connected to 3x3 Keypad
-// PC12,13,14,15 connected to LEDs (or Relays)
+// 包含必要的標頭檔
+#include <stdio.h>              // 標準輸入輸出函數
+#include "NUC100Series.h"       // NUC100系列微控制器定義
+#include "MCU_init.h"          // 微控制器初始化函數
+#include "SYS_init.h"          // 系統初始化函數
+#include "Scankey.h"           // 按鍵掃描函數
 
-#include <stdio.h>
-#include "NUC100Series.h"
-#include "MCU_init.h"
-#include "SYS_init.h"
-#include "Scankey.h"
-
+/*
+ * ================================================================
+ * GPIO初始化函數
+ * 功能：設定PC12,13,14,15為輸出模式，並初始化為高電位（LED關閉）
+ * ================================================================
+ */
 void Init_GPIO(void)
 {
-	  GPIO_SetMode(PC, BIT12, GPIO_MODE_OUTPUT);
-	  GPIO_SetMode(PC, BIT13, GPIO_MODE_OUTPUT);
-	  GPIO_SetMode(PC, BIT14, GPIO_MODE_OUTPUT);
-	  GPIO_SetMode(PC, BIT15, GPIO_MODE_OUTPUT);
-	  PC12=1; PC13=1; PC14=1; PC15=1;
+    // 設定PC12為輸出模式
+    GPIO_SetMode(PC, BIT12, GPIO_MODE_OUTPUT);
+    // 設定PC13為輸出模式
+    GPIO_SetMode(PC, BIT13, GPIO_MODE_OUTPUT);
+    // 設定PC14為輸出模式
+    GPIO_SetMode(PC, BIT14, GPIO_MODE_OUTPUT);
+    // 設定PC15為輸出模式
+    GPIO_SetMode(PC, BIT15, GPIO_MODE_OUTPUT);
+    
+    // 初始化所有LED為關閉狀態（高電位）
+    PC12=1; PC13=1; PC14=1; PC15=1;
 }
 
+/*
+ * ================================================================
+ * 主程式
+ * 功能：系統初始化和主迴圈
+ * ================================================================
+ */
 int main(void)
 {
-	uint32_t i =0;
-	SYS_Init();
-	OpenKeyPad();
-	Init_GPIO();
+    uint32_t i = 0;            // 按鍵掃描結果變數
+    
+    // ================================================================
+    // 系統初始化階段
+    // ================================================================
+    SYS_Init();                // 系統初始化
+    OpenKeyPad();              // 開啟按鍵掃描功能
+    Init_GPIO();               // 初始化GPIO設定
 
- 	while(1) 
-  {
-		i=ScanKey();
-		switch(i) {
-			// D1210799
-			
-			// 1
-			case 1 : PC12=1; PC13=1; PC14=1; PC15=0; break;
-			// 2
-			case 2 : PC12=1; PC13=1; PC14=0; PC15=1; break;
-			// 1
-			case 3 : PC12=1; PC13=1; PC14=1; PC15=0; break;
-			// 0
-			case 4 : PC12=0; PC13=0; PC14=0; PC15=0; break;
-			// 7
-			case 5 : PC12=1; PC13=0; PC14=0; PC15=0; break;
-			// 9
-			case 6 : PC12=0; PC13=1; PC14=1; PC15=0; break;
-			// 9
-			case 7 : PC12=0; PC13=1; PC14=1; PC15=0; break;
-			default: PC12=1; PC13=1; PC14=1; PC15=1; break;
-		}	
-	}
+    // ================================================================
+    // 主程式迴圈
+    // ================================================================
+    while(1) 
+    {
+        // 掃描按鍵狀態
+        i = ScanKey();
+        
+        // 根據按鍵值控制LED顯示
+        switch(i) {
+            // 按鍵1 - 顯示數字1的LED模式
+            case 1 : PC12=1; PC13=1; PC14=1; PC15=0; break;
+            
+            // 按鍵2 - 顯示數字2的LED模式
+            case 2 : PC12=1; PC13=1; PC14=0; PC15=1; break;
+            
+            // 按鍵3 - 顯示數字1的LED模式
+            case 3 : PC12=1; PC13=1; PC14=1; PC15=0; break;
+            
+            // 按鍵4 - 顯示數字0的LED模式
+            case 4 : PC12=0; PC13=0; PC14=0; PC15=0; break;
+            
+            // 按鍵5 - 顯示數字7的LED模式
+            case 5 : PC12=1; PC13=0; PC14=0; PC15=0; break;
+            
+            // 按鍵6 - 顯示數字9的LED模式
+            case 6 : PC12=0; PC13=1; PC14=1; PC15=0; break;
+            
+            // 按鍵7 - 顯示數字9的LED模式
+            case 7 : PC12=0; PC13=1; PC14=1; PC15=0; break;
+            
+            // 預設情況 - 所有LED關閉
+            default: PC12=1; PC13=1; PC14=1; PC15=1; break;
+        }	
+    }
 }

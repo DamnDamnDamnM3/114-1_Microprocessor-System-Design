@@ -1,68 +1,124 @@
-#include <stdio.h>
-#include "NUC100Series.h"
-#include "MCU_init.h"
-#include "SYS_init.h"
-#include "Scankey.h"
+/*
+ * ================================================================
+ * Lab 3 - Question 1: 按鍵控制蜂鳴器和LED顯示
+ * 功能：按鍵按下時觸發蜂鳴器響聲並顯示對應的LED模式
+ * 硬體：NUC100系列微控制器
+ * 作者：damnm3@googlegroups.com 共同作者
+ * ================================================================
+ * 
+ * 硬體連接：
+ * - PA0,1,2,3,4,5 連接至3x3按鍵矩陣
+ * - PB11 連接至蜂鳴器
+ * - PC12,13,14,15 連接至LED
+ * 
+ * 功能說明：
+ * 1. 按鍵按下時，蜂鳴器響對應次數
+ * 2. 同時LED顯示對應的數字模式
+ * 3. 使用按鍵釋放檢測避免重複觸發
+ */
 
+// 包含必要的標頭檔
+#include <stdio.h>              // 標準輸入輸出函數
+#include "NUC100Series.h"       // NUC100系列微控制器定義
+#include "MCU_init.h"          // 微控制器初始化函數
+#include "SYS_init.h"          // 系統初始化函數
+#include "Scankey.h"           // 按鍵掃描函數
+
+/*
+ * ================================================================
+ * 蜂鳴器控制函數
+ * 功能：控制蜂鳴器響指定次數
+ * 參數：number - 蜂鳴器響聲次數
+ * ================================================================
+ */
 void Buzz(int number) {
     int i;
+    // 迴圈控制蜂鳴器響聲次數
     for (i = 0; i < number; i++) {
-        PB11 = 0;
-        CLK_SysTickDelay(100000);
-        PB11 = 1;
-        CLK_SysTickDelay(100000);
+        PB11 = 0;                           // 蜂鳴器開啟（低電位）
+        CLK_SysTickDelay(100000);           // 延遲100ms
+        PB11 = 1;                           // 蜂鳴器關閉（高電位）
+        CLK_SysTickDelay(100000);           // 延遲100ms
     }
 }
 
-
+/*
+ * ================================================================
+ * LED二進制顯示函數
+ * 功能：根據數值顯示對應的LED二進制模式
+ * 參數：value - 要顯示的數值(1-9)
+ * ================================================================
+ */
 void Display_binary(int value) {
     switch(value) {
-			// 1
-			case 1 : PC12=1; PC13=1; PC14=1; PC15=0; break;
-			// 2
-			case 2 : PC12=1; PC13=1; PC14=0; PC15=1; break;
-			// 3
-			case 3 : PC12=1; PC13=1; PC14=0; PC15=0; break;
-			// 4
-			case 4 : PC12=1; PC13=0; PC14=1; PC15=1; break;
-			// 5
-			case 5 : PC12=1; PC13=0; PC14=1; PC15=0; break;
-			// 6
-			case 6 : PC12=1; PC13=0; PC14=0; PC15=1; break;
-			// 7
-			case 7 : PC12=1; PC13=0; PC14=0; PC15=0; break;
-			// 8
-			case 8 : PC12=0; PC13=1; PC14=1; PC15=1; break;
-			// 9
-			case 9 : PC12=0; PC13=1; PC14=1; PC15=0; break;
-	}
+        // 數字1的二進制顯示：PC12=1, PC13=1, PC14=1, PC15=0
+        case 1 : PC12=1; PC13=1; PC14=1; PC15=0; break;
+        
+        // 數字2的二進制顯示：PC12=1, PC13=1, PC14=0, PC15=1
+        case 2 : PC12=1; PC13=1; PC14=0; PC15=1; break;
+        
+        // 數字3的二進制顯示：PC12=1, PC13=1, PC14=0, PC15=0
+        case 3 : PC12=1; PC13=1; PC14=0; PC15=0; break;
+        
+        // 數字4的二進制顯示：PC12=1, PC13=0, PC14=1, PC15=1
+        case 4 : PC12=1; PC13=0; PC14=1; PC15=1; break;
+        
+        // 數字5的二進制顯示：PC12=1, PC13=0, PC14=1, PC15=0
+        case 5 : PC12=1; PC13=0; PC14=1; PC15=0; break;
+        
+        // 數字6的二進制顯示：PC12=1, PC13=0, PC14=0, PC15=1
+        case 6 : PC12=1; PC13=0; PC14=0; PC15=1; break;
+        
+        // 數字7的二進制顯示：PC12=1, PC13=0, PC14=0, PC15=0
+        case 7 : PC12=1; PC13=0; PC14=0; PC15=0; break;
+        
+        // 數字8的二進制顯示：PC12=0, PC13=1, PC14=1, PC15=1
+        case 8 : PC12=0; PC13=1; PC14=1; PC15=1; break;
+        
+        // 數字9的二進制顯示：PC12=0, PC13=1, PC14=1, PC15=0
+        case 9 : PC12=0; PC13=1; PC14=1; PC15=0; break;
+    }
 }
 
+/*
+ * ================================================================
+ * 主程式
+ * 功能：系統初始化和主迴圈，實作按鍵觸發蜂鳴器和LED顯示
+ * ================================================================
+ */
 int main(void) {
-    int key, lastKey = 0;
-		int pressed = 0;
+    int key, lastKey = 0;        // 當前按鍵值和上次按鍵值
+    int pressed = 0;             // 按鍵按下狀態標記
 
-    SYS_Init();
-    OpenKeyPad();
+    // ================================================================
+    // 系統初始化階段
+    // ================================================================
+    SYS_Init();                  // 系統初始化
+    OpenKeyPad();                // 開啟按鍵掃描功能
 
+    // GPIO初始化
+    GPIO_SetMode(PB, BIT11, GPIO_MODE_OUTPUT);                    // PB11設為輸出（蜂鳴器）
+    GPIO_SetMode(PC, BIT12 | BIT13 | BIT14 | BIT15, GPIO_MODE_OUTPUT); // PC12-15設為輸出（LED）
 
-    GPIO_SetMode(PB, BIT11, GPIO_MODE_OUTPUT);
-    GPIO_SetMode(PC, BIT12 | BIT13 | BIT14 | BIT15, GPIO_MODE_OUTPUT);
+    PB11 = 1;                    // 蜂鳴器初始狀態為關閉
 
-    PB11 = 1;
-
+    // ================================================================
+    // 主程式迴圈
+    // ================================================================
     while (1) {
-        key = ScanKey();
+        key = ScanKey();         // 掃描按鍵狀態
 
+        // 按鍵按下檢測（從無按鍵變為有按鍵）
         if (key != 0 && pressed == 0) {
-            // ????? ? ?? key
+            // 記錄按下的按鍵
             pressed = key;
         }
+        // 按鍵釋放檢測（從有按鍵變為無按鍵）
         else if (key == 0 && pressed != 0) {
-            // ????? ? ????
-            Display_binary(pressed);
-            Buzz(pressed);
-            pressed = 0; // reset
+            // 執行按鍵對應的動作
+            Display_binary(pressed);  // 顯示LED模式
+            Buzz(pressed);            // 蜂鳴器響聲
+            pressed = 0;              // 重置按鍵狀態
         }
     }
 }

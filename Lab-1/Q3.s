@@ -1,8 +1,17 @@
-        AREA    |.text|, CODE, READONLY
-        THUMB
-        EXPORT  __main
-        EXPORT  main
-        ENTRY
+; ================================================================
+; Lab 1 - Question 3: 反向乘積計算
+; 功能：計算兩個陣列的反向乘積和
+; 公式：result = a1*bn + a2*b(n-1) + ... + an*b1
+; 硬體：ARM Cortex-M0 微處理器 (Thumb-1指令集)
+; 限制：只使用R0-R7暫存器，符合Cortex-M0規範
+; 作者：damnm3@googlegroups.com 共同作者
+; ================================================================
+
+        AREA    |.text|, CODE, READONLY    ; 定義程式碼區域，唯讀
+        THUMB                               ; 使用Thumb指令集
+        EXPORT  __main                      ; 匯出主程式入口點
+        EXPORT  main                        ; 匯出main函數
+        ENTRY                               ; 標記程式進入點
 
 ;------------------------------------------------------
 ; Lab 1.3 (Thumb-1 / Cortex-M0 safe, only R0–R7 used)
@@ -14,65 +23,77 @@
 
 __main
 main
-        ; r0 = &A_Array
+        ; ================================================================
+        ; 初始化階段
+        ; ================================================================
+        ; r0 = &A_Array (A陣列起始位址)
         LDR     r0, =A_Array
 
-        ; r7 = n = size
+        ; r7 = n = size (陣列大小)
         LDR     r7, =size
         LDR     r7, [r7]
 
-        ; r1 = &B_Array + (n-1)*4
+        ; r1 = &B_Array + (n-1)*4 (B陣列最後一個元素的位址)
         LDR     r1, =B_Array
-        MOVS    r2, r7
-        SUBS    r2, #1
-        LSLS    r2, r2, #2
-        ADDS    r1, r2           ; r1 -> last element of B
+        MOVS    r2, r7                      ; r2 = n
+        SUBS    r2, #1                      ; r2 = n-1
+        LSLS    r2, r2, #2                   ; r2 = (n-1)*4 (每個元素4位元組)
+        ADDS    r1, r2                       ; r1 -> B陣列最後一個元素
 
-        ; r3 = accumulator (sum)
+        ; r3 = accumulator (sum) - 總和累加器
         MOVS    r3, #0
 
+        ; ================================================================
+        ; 主迴圈：計算反向乘積
+        ; ================================================================
 loop
-        ; load one pair
-        LDR     r4, [r0]         ; r4 = a_i
-        LDR     r5, [r1]         ; r5 = b_(n+1-i)
+        ; 載入一對元素
+        LDR     r4, [r0]                     ; r4 = a_i (A陣列第i個元素)
+        LDR     r5, [r1]                     ; r5 = b_(n+1-i) (B陣列對應元素)
 
-        ; advance pointers
-        ADDS    r0, #4
-        SUBS    r1, #4
+        ; 移動指標
+        ADDS    r0, #4                       ; A陣列指標向前移動
+        SUBS    r1, #4                       ; B陣列指標向後移動
 
-        ; ---------- multiply r4 * r5 by repeated add ----------
-        ; r6 = multiplicand (a_i)
-        ; r5 = multiplier (b)
-        ; r2 = product accumulator (clear)
+        ; ---------- 使用重複加法進行乘法運算 ----------
+        ; r6 = multiplicand (被乘數 a_i)
+        ; r5 = multiplier (乘數 b)
+        ; r2 = product accumulator (乘積累加器，清零)
         MOV     r6, r4
         MOVS    r2, #0
 
-        ; if multiplier == 0 skip multiply loop
+        ; 如果乘數為0，跳過乘法迴圈
         CMP     r5, #0
         BEQ     mul_done
 
 mul_loop
-        ADDS    r2, r6           ; r2 += r6
-        SUBS    r5, #1
-        BNE     mul_loop
+        ADDS    r2, r6                       ; r2 += r6 (累加被乘數)
+        SUBS    r5, #1                       ; 乘數減1
+        BNE     mul_loop                      ; 如果乘數不為0，繼續迴圈
 
 mul_done
-        ADDS    r3, r2           ; sum += product
+        ADDS    r3, r2                       ; sum += product (將乘積加入總和)
 
-        ; countdown main loop
+        ; 主迴圈計數器遞減
         SUBS    r7, #1
-        BNE     loop
+        BNE     loop                          ; 如果還有元素，繼續迴圈
 
-        ; move final sum to R4 (as required)
+        ; ================================================================
+        ; 結果處理
+        ; ================================================================
+        ; 將最終總和移動到R4 (按要求)
         MOV     r4, r3
 
-        BKPT    #0               ; stop in debugger
-halt    B       halt
+        ; ================================================================
+        ; 程式結束
+        ; ================================================================
+        BKPT    #0                           ; 在除錯器中停止
+halt    B       halt                         ; 安全迴圈
 
 ;----------------------- DATA -------------------------
-        AREA    myData, DATA, READONLY
-        ALIGN
-size    DCD     8
-A_Array DCD     1, 2, 3, 4, 5, 6, 7, 8
-B_Array DCD     9,10,11,12,13,14,15,16
-        END
+        AREA    myData, DATA, READONLY      ; 定義資料區域，唯讀
+        ALIGN                                ; 對齊記憶體邊界
+size    DCD     8                           ; 陣列大小
+A_Array DCD     1, 2, 3, 4, 5, 6, 7, 8      ; A陣列：1到8
+B_Array DCD     9,10,11,12,13,14,15,16      ; B陣列：9到16
+        END                                  ; 程式結束
