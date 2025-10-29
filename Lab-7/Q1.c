@@ -1,3 +1,5 @@
+// have to add Scankey into user/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "NUC100Series.h"
